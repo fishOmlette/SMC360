@@ -2,7 +2,7 @@
 
 [![Python](https://img.shields.io/badge/Python-3.9%2B-blue.svg)]()
 [![License](https://img.shields.io/badge/License-MIT-green.svg)]()
-[![Status](https://img.shields.io/badge/status-active-success.svg)]()
+[![Status](https://img.shields.io/badge/status-inactive-lightgrey)]()
 
 **SMC360** is a unified toolkit for extracting, parsing, and managing social media data at scale.  
 It provides both a **command-line interface (CLI)** and a **web interface**, enabling flexible integration into automated workflows and user-friendly interactive environments.
