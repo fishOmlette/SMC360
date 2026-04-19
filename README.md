@@ -1,10 +1,10 @@
-# smc360 — Social Media Data Connector
+# SMC360 — Social Media Data Connector
 
 [![Python](https://img.shields.io/badge/Python-3.9%2B-blue.svg)]()
 [![License](https://img.shields.io/badge/License-MIT-green.svg)]()
 [![Status](https://img.shields.io/badge/status-active-success.svg)]()
 
-**smc360** is a unified toolkit for extracting, parsing, and managing social media data at scale.  
+**SMC360** is a unified toolkit for extracting, parsing, and managing social media data at scale.  
 It provides both a **command-line interface (CLI)** and a **web interface**, enabling flexible integration into automated workflows and user-friendly interactive environments.
 
 ---
@@ -54,11 +54,11 @@ database:
   port: 5432
   user: postgres
   password: secret
-  database: smc360
+  database: SMC360
 
 storage:
   type: s3
-  bucket: smc360-data
+  bucket: SMC360-data
   access_key: YOUR_AWS_KEY
   secret_key: YOUR_AWS_SECRET
 ```
@@ -70,15 +70,15 @@ storage:
 Extract and store social media data directly from the terminal:
 
 ```bash
-smc360 extract --config config.yaml --platform youtube
+SMC360 extract --config config.yaml --platform youtube
 ```
 
 Other commands:
 
 ```bash
-smc360 extract --platform instagram
-smc360 status
-smc360 config validate
+SMC360 extract --platform instagram
+SMC360 status
+SMC360 config validate
 ```
 
 ---
@@ -88,7 +88,7 @@ smc360 config validate
 Launch the web app for interactive control:
 
 ```bash
-smc360 web
+SMC360 web
 ```
 
 Open [http://localhost:8000](http://localhost:8000) to manage configurations, run extractions, and monitor jobs.
