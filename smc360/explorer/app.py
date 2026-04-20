@@ -1,11 +1,12 @@
 # App not optimised | Disabled Drag and Drop
 
-import dash, yaml, boto3
+import dash
+import yaml
+import boto3
 from dash import html, dcc, Input, State, Output, ClientsideFunction
 import dash_bootstrap_components as dbc
 import dash_ace
-from lib import socialMediaConnector
-# import psycopg2, snowflake.connector
+from smc360 import SocialMediaConnector
 
 def explorer():
     app = dash.Dash(__name__, external_scripts=["https://cdnjs.cloudflare.com/ajax/libs/dragula/3.7.2/dragula.min.js"], external_stylesheets=[dbc.themes.CERULEAN], suppress_callback_exceptions=True)
@@ -806,7 +807,7 @@ def explorer():
     )
     def extract(disabled):
         if not disabled: 
-            socialMediaConnector('config.yaml').run()
+            SocialMediaConnector('config.yaml').run()
             # with open('config.yaml', 'r') as f:
             #     config = yaml.safe_load(f)
             # if config['database']['service_name'] == 'postgresql':

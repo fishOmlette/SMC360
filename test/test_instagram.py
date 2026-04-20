@@ -74,8 +74,9 @@ def test_media_method(mock_get):
     mock_get.assert_called_once_with(expected_url, params=expected_params)
     mock_response.raise_for_status.assert_called_once_with()
 
-@mock.patch('smc360.services.platform.instagram.self.object_storage.get_objects', return_value=['file1.txt', 'test/file2.txt'])
-def test_read_parse_load(mock_get_objects):
+def test_read_parse_load():
+    # This test is a placeholder for more comprehensive integration testing
+    # The read_parse_load method requires complex mocking of object storage and database
     pass
 
 
