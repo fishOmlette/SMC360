@@ -1,0 +1,73 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "smc360"
+version = "1.0.0"
+description = "Social media data connector for extracting, parsing, and managing social media data at scale."
+readme = "README.md"
+license = {text = "MIT"}
+authors = [
+    {name = "Mohammed Adil Farooq", email = "adil.farooq@blend360.com"}
+]
+requires-python = ">=3.9"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Topic :: Internet",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+]
+keywords = ["social-media", "youtube", "instagram", "data-extraction", "api-client"]
+dependencies = [
+    "boto3>=1.26.0",
+    "click>=8.0.0",
+    "dash>=2.10.0",
+    "dash-ace>=0.2.0",
+    "dash-bootstrap-components>=1.4.0",
+    "Flask>=2.2.0",
+    "halo>=0.0.31",
+    "psycopg2-binary>=2.9.0",
+    "python-dotenv>=1.0.0",
+    "PyYAML>=6.0",
+    "requests>=2.28.0",
+    "snowflake-connector-python>=3.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+    "moto>=4.0.0",
+    "pytest-cov>=4.0.0",
+]
+
+[project.urls]
+Homepage = "https://github.com/fishOmlette/SMC360"
+Repository = "https://github.com/fishOmlette/SMC360"
+"Bug Tracker" = "https://github.com/fishOmlette/SMC360/issues"
+
+[project.scripts]
+smc360 = "smc360.cli:main"
+
+[tool.setuptools.packages.find]
+exclude = ["test*", "example*"]
+
+[tool.setuptools.package-data]
+"smc360.explorer" = ["assets/*"]
+
+[tool.pytest.ini_options]
+testpaths = ["test"]
+python_files = ["test_*.py"]
+python_functions = ["test_*"]
+
+[tool.coverage.run]
+source = ["smc360"]
+omit = ["test/*", "smc360/explorer/*"]

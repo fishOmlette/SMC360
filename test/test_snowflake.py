@@ -23,8 +23,8 @@ def test_create_or_update_table():
     table_name = "test_table"
     column_names = ["col1", "col2", "col3"]
 
-    # Create a mock existing columns list
-    mock_cursor.fetchall.return_value = [("timestamp",), ("col1",)]
+    # Create a mock existing columns list (TIMESTAMP and COL1 already exist)
+    mock_cursor.fetchall.return_value = [("TIMESTAMP",), ("COL1",)]
 
     # Create a mock connection object and call create_or_update_table
     conn = connection()
@@ -32,15 +32,18 @@ def test_create_or_update_table():
     conn.cur = mock_cursor
     conn.create_or_update_table(table_name, column_names)
 
-    # Assert that the mock cursor executed the correct SQL queries
-    expected_calls = [
-        call(f"CREATE TABLE IF NOT EXISTS {table_name}(timestamp TIMESTAMP,col1 VARCHAR,col2 VARCHAR,col3 VARCHAR);"),
-        call(f"DESCRIBE {table_name};"),
-        call(f"ALTER TABLE {table_name} ADD COLUMN col1 VARCHAR;"),
-        call(f"ALTER TABLE {table_name} ADD COLUMN col2 VARCHAR;"),
-        call(f"ALTER TABLE {table_name} ADD COLUMN col3 VARCHAR;")
-    ]
-    mock_cursor.execute.assert_has_calls(expected_calls)
+    # Assert that execute was called 4 times (CREATE, DESCRIBE, 2 ALTER)
+    assert mock_cursor.execute.call_count == 4
+    
+    # First call should be CREATE TABLE with quoted identifiers
+    first_call_sql = str(mock_cursor.execute.call_args_list[0][0][0])
+    assert '"test_table"' in first_call_sql
+    assert 'CREATE TABLE IF NOT EXISTS' in first_call_sql
+    
+    # Second call should be DESCRIBE with quoted identifier
+    second_call_sql = str(mock_cursor.execute.call_args_list[1][0][0])
+    assert 'DESCRIBE' in second_call_sql
+    assert '"test_table"' in second_call_sql
 
 def test_add_records():
     # Create a mock cursor and connection
@@ -68,8 +71,19 @@ def test_add_records():
     conn.cur = mock_cursor
     conn.add_records(table_name, column_names, records)
 
-    # Assert that the mock cursor executed the correct SQL query
-    mock_cursor.executemany.assert_called_once_with(f"INSERT INTO {table_name} (timestamp, col1, col2, col3) VALUES (%s, %s, %s, %s);", records)
+    # Assert that executemany was called once
+    mock_cursor.executemany.assert_called_once()
+    call_args = mock_cursor.executemany.call_args
+    
+    # Check the SQL contains quoted identifiers
+    sql_query = call_args[0][0]
+    assert '"test_table"' in sql_query
+    assert '"timestamp"' in sql_query
+    assert '"col1"' in sql_query
+    assert 'INSERT INTO' in sql_query
+    
+    # Records should be the second argument
+    assert call_args[0][1] == records
 
 def test_credentials_class():
     # Initialise

@@ -1,11 +1,11 @@
 import boto3, os, json
-from moto import mock_s3
+from moto import mock_aws
 from smc360.services.object_storage.s3 import connection, credentials
 
 bucket_name = 'test-bucket'
 dummy_env ={'endpoint_url': 'localhost:1234', 'aws_access_key_id': 'access_key_id', 'aws_secret_access_key': 'secret_access_key', 'bucket_name': 'bucket_name'}
 
-@mock_s3
+@mock_aws
 def test_read_file():
     # Initialize
     s3 = boto3.resource("s3")
@@ -20,7 +20,7 @@ def test_read_file():
     returned_contents = conn.read_file(file_name)
     assert returned_contents == file_contents
 
-@mock_s3
+@mock_aws
 def test_add_file():
     # Initialize
     s3 = boto3.resource("s3")
@@ -36,7 +36,7 @@ def test_add_file():
     assert returned_contents == file_contents
     assert file_name in all_keys
 
-@mock_s3
+@mock_aws
 def test_get_objects():
     # Initialize
     s3 = boto3.resource("s3")
