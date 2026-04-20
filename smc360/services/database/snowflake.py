@@ -13,10 +13,10 @@ The connection is established using a configuration dictionary which should incl
 Example:
 ----
 `database`:
-    service_name: postgresql
+    service_name: snowflake
     user: my-user
     password: my-password
-    account: my-database
+    account: my-account
     warehouse: my-warehouse
     database: my-database
     schema: my-schema
@@ -27,9 +27,29 @@ Classes:
     - `connection`: A context manager that provides a connection to a database and methods for executing SQL queries.
 """
 
-import os, json, logging, snowflake.connector
+import os
+import re
+import json
+import logging
+import snowflake.connector
+from typing import List, Tuple, Any, Optional
 
 logger = logging.getLogger(__name__)
+
+# Pattern for valid SQL identifiers (table/column names)
+VALID_IDENTIFIER_PATTERN = re.compile(r'^[a-zA-Z_][a-zA-Z0-9_]*$')
+
+
+def _validate_identifier(name: str) -> bool:
+    """Validate that a name is a safe SQL identifier."""
+    return bool(VALID_IDENTIFIER_PATTERN.match(name))
+
+
+def _quote_identifier(name: str) -> str:
+    """Safely quote a Snowflake identifier."""
+    # Double any existing double quotes to escape them
+    escaped = name.replace('"', '""')
+    return f'"{escaped}"'
 
 class credentials:
     """
@@ -114,7 +134,7 @@ class connection(credentials):
                 except Exception as e:
                     logger.error(str(e))
     
-    def create_or_update_table(self, table_name, column_names):
+    def create_or_update_table(self, table_name: str, column_names: List[str]) -> None:
         """
         Creates a new table or updates an existing table in the database with the specified column names.
         
@@ -126,22 +146,38 @@ class connection(credentials):
         ----
             - `table_name (str)`: The name of the table to create or update.
             - `column_names (list)`: A list of column names to create or add to the table.
+        
+        Raises
+        ----
+            - `ValueError`: If table_name or column_names contain invalid characters.
         """
+        # Validate identifiers to prevent SQL injection
+        if not _validate_identifier(table_name):
+            raise ValueError(f"Invalid table name: {table_name}")
+        for col in column_names:
+            if not _validate_identifier(col):
+                raise ValueError(f"Invalid column name: {col}")
+        
+        # Build column definitions
+        columns = ["timestamp TIMESTAMP"]
+        columns.extend([f"{_quote_identifier(col)} VARCHAR" for col in column_names])
+        columns_string = ", ".join(columns)
+        
+        # Create table using quoted identifier
+        create_query = f"CREATE TABLE IF NOT EXISTS {_quote_identifier(table_name)} ({columns_string});"
+        self.cur.execute(create_query)
+        
+        # Get existing columns
+        self.cur.execute(f"DESCRIBE {_quote_identifier(table_name)};")
+        existing_columns = [row[0].upper() for row in self.cur.fetchall()]
+        
+        # Add new columns
+        for column_name in column_names:
+            if column_name.upper() not in existing_columns:
+                alter_query = f"ALTER TABLE {_quote_identifier(table_name)} ADD COLUMN {_quote_identifier(column_name)} VARCHAR;"
+                self.cur.execute(alter_query)
 
-        try:
-            columns_string = "timestamp TIMESTAMP,"
-            for column in column_names:
-                columns_string += column+' VARCHAR,'
-            self.cur.execute(f"CREATE TABLE IF NOT EXISTS {table_name}({columns_string[:-1]});")
-            self.cur.execute(f"DESCRIBE {table_name};")
-            existing_columns = [row[0] for row in self.cur.fetchall()]
-            for column_name in column_names:
-                if column_name.upper() not in existing_columns:
-                    self.cur.execute(f"ALTER TABLE {table_name} ADD COLUMN {column_name} VARCHAR;")
-        except:
-            raise
-
-    def add_records(self, table_name, column_names, records):
+    def add_records(self, table_name: str, column_names: List[str], records: List[Tuple[Any, ...]]) -> None:
         """
         Adds multiple records to the specified table in the database.
         
@@ -155,12 +191,21 @@ class connection(credentials):
             - `column_names (list)`: A list of column names to create or add to the table.
             - `records (list)`: A list of tuples, where each tuple represents one record to be inserted into the table.
             The values in the tuple should be in the same order as the column names specified in the `column_names` parameter.
+        
+        Raises
+        ----
+            - `ValueError`: If table_name or column_names contain invalid characters.
         """
-
-        try:
-            column_names = ['timestamp'] + column_names
-            column_string = ', '.join(column_names)
-            placeholders = ', '.join(['%s']*len(column_names))
-            self.cur.executemany(f"INSERT INTO {table_name} ({column_string}) VALUES ({placeholders});", records)
-        except:
-            raise
+        # Validate identifiers to prevent SQL injection
+        if not _validate_identifier(table_name):
+            raise ValueError(f"Invalid table name: {table_name}")
+        for col in column_names:
+            if not _validate_identifier(col):
+                raise ValueError(f"Invalid column name: {col}")
+        
+        all_columns = ['timestamp'] + column_names
+        column_string = ', '.join([_quote_identifier(col) for col in all_columns])
+        placeholders = ', '.join(['%s'] * len(all_columns))
+        
+        insert_query = f"INSERT INTO {_quote_identifier(table_name)} ({column_string}) VALUES ({placeholders});"
+        self.cur.executemany(insert_query, records)

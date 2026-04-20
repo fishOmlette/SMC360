@@ -1,10 +1,23 @@
-import os, re, json, yaml, logging
+"""
+Core library for SMC360 - Social Media Data Connector.
+
+This module provides the main SocialMediaConnector class for extracting,
+parsing, and managing social media data.
+"""
+
+import os
+import re
+import json
+import yaml
+import logging
 from halo import Halo
 from datetime import datetime
 from dotenv import load_dotenv
 from importlib import import_module
+from typing import Any, Dict, Optional
 
-class socialMediaConnector:
+
+class SocialMediaConnector:
     """
     A class for parsing social media data and uploading it to an object storage and database.
 

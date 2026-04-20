@@ -1,11 +1,15 @@
+"""
+Command-line interface for SMC360.
+"""
+
 import argparse
-from smc360.lib import socialMediaConnector
+from smc360 import SocialMediaConnector, __version__
 from smc360.explorer.app import explorer
         
 def main(argv=None):
     parser = argparse.ArgumentParser(description='Social media parser for analyzing and exploring social media data.')
     parser.add_argument('-c', '--config', type=str, metavar="path/to/config", help='path to system configuration file')
-    parser.add_argument('-v', '--version', action='version', version='smc360 version 1.0')
+    parser.add_argument('-v', '--version', action='version', version=f'smc360 version {__version__}')
     parser.add_argument('-e', '--explorer', action='store_true', help='start explorer')
     args = parser.parse_args(argv)
 
@@ -36,6 +40,6 @@ def main(argv=None):
         return
 
     if args.config is not None:
-        socialMediaConnector(args.config).run()
+        SocialMediaConnector(args.config).run()
     if args.explorer:
         explorer()

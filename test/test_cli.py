@@ -1,7 +1,7 @@
 from unittest.mock import patch
 from smc360.cli import main
 
-@patch('smc360.cli.socialMediaConnector')
+@patch('smc360.cli.SocialMediaConnector')
 def test_main_with_config(mock_connector):
     config_path = "path/to/config"
     main(['-c', config_path])

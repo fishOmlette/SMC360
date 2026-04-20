@@ -27,9 +27,23 @@ Classes:
     - `connection`: A context manager that provides a connection to a database and methods for executing SQL queries.
 """
 
-import os, json, psycopg2, logging
+import os
+import re
+import json
+import psycopg2
+import logging
+from typing import List, Tuple, Any, Optional
+from psycopg2 import sql
 
 logger = logging.getLogger(__name__)
+
+# Pattern for valid SQL identifiers (table/column names)
+VALID_IDENTIFIER_PATTERN = re.compile(r'^[a-zA-Z_][a-zA-Z0-9_]*$')
+
+
+def _validate_identifier(name: str) -> bool:
+    """Validate that a name is a safe SQL identifier."""
+    return bool(VALID_IDENTIFIER_PATTERN.match(name))
 
 class credentials:
     """
@@ -114,7 +128,7 @@ class connection(credentials):
                 except Exception as e:
                     logger.error(str(e))
     
-    def create_or_update_table(self, table_name, column_names):
+    def create_or_update_table(self, table_name: str, column_names: List[str]) -> None:
         """
         Creates a new table or updates an existing table in the database with the specified column names.
         
@@ -126,22 +140,46 @@ class connection(credentials):
         ----
             - `table_name (str)`: The name of the table to create or update.
             - `column_names (list)`: A list of column names to create or add to the table.
+        
+        Raises
+        ----
+            - `ValueError`: If table_name or column_names contain invalid characters.
         """
-
-        try:
-            columns_string = "timestamp TIMESTAMP,"
-            for column in column_names:
-                columns_string += column+' VARCHAR,'
-            self.cur.execute(f"CREATE TABLE IF NOT EXISTS {table_name}({columns_string[:-1]});")
-            self.cur.execute(f"SELECT column_name FROM information_schema.columns WHERE table_name = '{table_name}';")
-            existing_columns = [row[0] for row in self.cur.fetchall()]
-            for column_name in column_names:
-                if column_name.lower() not in existing_columns:
-                    self.cur.execute(f"ALTER TABLE {table_name} ADD COLUMN {column_name} VARCHAR;")
-        except:
-            raise
+        # Validate identifiers to prevent SQL injection
+        if not _validate_identifier(table_name):
+            raise ValueError(f"Invalid table name: {table_name}")
+        for col in column_names:
+            if not _validate_identifier(col):
+                raise ValueError(f"Invalid column name: {col}")
+        
+        # Build CREATE TABLE statement using psycopg2.sql for safe identifier handling
+        table_id = sql.Identifier(table_name)
+        columns = [sql.SQL("timestamp TIMESTAMP")]
+        columns.extend([sql.SQL("{} VARCHAR").format(sql.Identifier(col)) for col in column_names])
+        
+        create_query = sql.SQL("CREATE TABLE IF NOT EXISTS {} ({});").format(
+            table_id,
+            sql.SQL(", ").join(columns)
+        )
+        self.cur.execute(create_query)
+        
+        # Get existing columns
+        self.cur.execute(
+            "SELECT column_name FROM information_schema.columns WHERE table_name = %s;",
+            (table_name,)
+        )
+        existing_columns = [row[0].lower() for row in self.cur.fetchall()]
+        
+        # Add new columns
+        for column_name in column_names:
+            if column_name.lower() not in existing_columns:
+                alter_query = sql.SQL("ALTER TABLE {} ADD COLUMN {} VARCHAR;").format(
+                    table_id,
+                    sql.Identifier(column_name)
+                )
+                self.cur.execute(alter_query)
     
-    def add_records(self, table_name, column_names, records):
+    def add_records(self, table_name: str, column_names: List[str], records: List[Tuple[Any, ...]]) -> None:
         """
         Adds multiple records to the specified table in the database.
         
@@ -155,12 +193,24 @@ class connection(credentials):
             - `column_names (list)`: A list of column names to create or add to the table.
             - `records (list)`: A list of tuples, where each tuple represents one record to be inserted into the table.
             The values in the tuple should be in the same order as the column names specified in the `column_names` parameter.
+        
+        Raises
+        ----
+            - `ValueError`: If table_name or column_names contain invalid characters.
         """
-
-        try:
-            column_names = ['timestamp'] + column_names
-            column_string = ', '.join(column_names)
-            placeholders = ', '.join(['%s']*len(column_names))
-            self.cur.executemany(f"INSERT INTO {table_name} ({column_string}) VALUES ({placeholders});", records)
-        except:
-            raise
+        # Validate identifiers to prevent SQL injection
+        if not _validate_identifier(table_name):
+            raise ValueError(f"Invalid table name: {table_name}")
+        for col in column_names:
+            if not _validate_identifier(col):
+                raise ValueError(f"Invalid column name: {col}")
+        
+        all_columns = ['timestamp'] + column_names
+        
+        # Build INSERT statement using psycopg2.sql for safe identifier handling
+        insert_query = sql.SQL("INSERT INTO {} ({}) VALUES ({});").format(
+            sql.Identifier(table_name),
+            sql.SQL(", ").join([sql.Identifier(col) for col in all_columns]),
+            sql.SQL(", ").join([sql.Placeholder()] * len(all_columns))
+        )
+        self.cur.executemany(insert_query, records)
