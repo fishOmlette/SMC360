@@ -1,4 +1,4 @@
-# App not optimised
+# App not optimised | Disabled Drag and Drop
 
 import dash
 import yaml
@@ -117,8 +117,23 @@ def explorer():
                             ], className='step-header-container d-flex justify-content-between mt-1', style={'textAlign': 'center'})
                         ])
                     ], style={'border': '2px solid black', "background-color": "white", "padding": "10px"}),
+            ],
+        'Reddit':
+            [
+                html.Div([
+                    html.H6('POSTS', className='text-info', style={'font-weight': 'bold'}),
+                    html.Hr(),
+                    html.Div([
+                            html.Div([], id='posts'),
+                            html.Div([
+                                html.Button('Add', id='button-posts'),
+                                html.Button('Clear', id='button-clear-posts')
+                            ], className='step-header-container d-flex justify-content-between mt-1', style={'textAlign': 'center'})
+                        ])
+                    ], style={'border': '2px solid black', "background-color": "white", "padding": "10px"})
             ]
     }
+
     beginer_input = {
         'YouTube': [
             html.Div([], className="container", id='youtube', style={"width": "70%", "background-color": "lightgrey"}),
@@ -144,6 +159,10 @@ def explorer():
         'Instagram': [
             html.Div([
                 html.Div([
+                    dcc.Input(type='text', value='default_limit', style={'font-weight': 'bold', 'border-radius': 5, 'border-style': 'solid black', 'border-width': '2px'}, disabled=True),
+                    dcc.Input(type='number', value=5000, style={'border-radius': 5, 'border-style': 'solid black', 'border-width': '2px', 'width': '100%'})
+                    ], style={'display': 'flex', 'flexDirection': 'row', 'border': '2px solid black', "background-color": "white", "padding": "10px"}, className='mb-2'),
+                html.Div([
                     html.H6('USERS', className='text-info', style={'font-weight': 'bold'}),
                     html.Hr(),
                     ], style={'border': '2px solid black', "background-color": "white", "padding": "10px"}, className='mb-2'),
@@ -160,16 +179,33 @@ def explorer():
                     html.Button("media", id='button-input-media', disabled=True),
                     html.Hr(style={"width": "100%"}),
                     html.P('ATTRIBUTES', className='text-info', style={'font-weight': 'bold', 'textAlign': 'center', 'margin': '0', 'padding': '0'}),
-                    html.Button("default_limit", id='button-input-instagram-limit'),
+                    html.Button("default_limit", id='button-input-instagram-limit', disabled=True),
                     html.Hr(style={"width": "100%"}),
                     html.Button("Clear", id='button-instagram-clear'),
                 ]
             )
+        ],
+        'Reddit': [
+            html.Div([], id='reddit', className="container", style={"width": "70%", "background-color": "lightgrey", "padding": "10px"}),
+            html.Div(
+                style={"width": "30%", "display": "flex", "flex-direction": "column", "border":"2px black solid", "padding": "10px"},
+                children=[
+                    html.P('DATAPOINTS', className='text-info', style={'font-weight': 'bold', 'textAlign': 'center', 'margin': '0', 'padding': '0'}),
+                    html.Button("posts", id='button-input-posts'),
+                    html.Hr(style={"width": "100%"}),
+                    html.P('ATTRIBUTES', className='text-info', style={'font-weight': 'bold', 'textAlign': 'center', 'margin': '0', 'padding': '0'}),
+                    html.Button("default_limit", id='button-input-reddit-limit'),
+                    html.Hr(style={"width": "100%"}),
+                    html.Button("Clear", id='button-reddit-clear'),
+                ]
+            )
         ]
     }
-    platforms = ['YouTube', 'Instagram']
+
+    platforms = ['YouTube', 'Instagram', 'Reddit']
     database = ['PostgreSQL', 'Snowflake']
     object_storage = ['S3']
+
     platform_help_bgn = {
         'YouTube': [
             html.Div(style={'display': 'flex', 'flexDirection': 'row', "background-color": "white"}, 
@@ -194,8 +230,16 @@ def explorer():
                     dcc.Input(type='text', value='key', style={'font-weight': 'bold', 'border-radius': 5, 'border-style': 'solid black', 'border-width': '2px'}, disabled=True),
                     dcc.Input(type='text', style={'border-radius': 5, 'border-style': 'solid black', 'border-width': '2px', 'width': '100%'})
                     ]),
+        ],
+        'Reddit': [
+            html.Div(style={'display': 'flex', 'flexDirection': 'row', "background-color": "white"}, 
+                children=[
+                    dcc.Input(type='text', value='service_name', style={'font-weight': 'bold', 'border-radius': 5, 'border-style': 'solid black', 'border-width': '2px'}, disabled=True),
+                    dcc.Input(type='text', value='reddit', style={'border-radius': 5, 'border-style': 'solid black', 'border-width': '2px', 'width': '100%'}, disabled=True)
+                    ], className='mb-1'),
         ]
     }
+
     database_help_bgn = {
         'PostgreSQL': [
             html.Div(style={'display': 'flex', 'flexDirection': 'row', "background-color": "white"}, 
@@ -272,6 +316,7 @@ def explorer():
                     ])
         ]
     }
+
     object_storage_help_bgn = {
         'S3': [
             html.Div(style={'display': 'flex', 'flexDirection': 'row', "background-color": "white"}, 
@@ -301,14 +346,16 @@ def explorer():
                     ], className='mb-1')
         ]
     }
-    input_help = {'YouTube': "default_limit: 5000\nget_comments: False\nfollow_up_on_search: False\n\nchannels: {}\nvideos: {} \nplaylists: {}\ncomments: {}\nsearch: {}", 'Instagram':'default_limit: 5000\n\nusers: {}\nmedia: {}'}
-    models_help = {'YouTube': "channels: {}\nplaylists: {}\nvideos: {}\ncomments: {}", 'Instagram': "users: {}\nmedia: {}"}
+
+    input_help = {'YouTube': "default_limit: 5000\nget_comments: False\nfollow_up_on_search: False\n\nchannels: {}\nvideos: {} \nplaylists: {}\ncomments: {}\nsearch: {}", 'Instagram':'default_limit: 5000\n\nusers: {}\nmedia: {}', 'Reddit':'default_limit: 5000\n\nposts: {}'}
+    models_help = {'YouTube': "channels: {}\nplaylists: {}\nvideos: {}\ncomments: {}", 'Instagram': "users: {}\nmedia: {}", 'Reddit': "posts: {}"}
     models_users = ['id', 'account_type', 'media_count', 'username']
     models_media = ['id' , 'caption', 'media_type', 'media_url', 'permalink', 'timestamp', 'username']
     models_channels = ['id', 'snippet.title', 'snippet.description', 'snippet.customUrl', 'snippet.publishedAt', 'contentDetails.relatedPlaylists.uploads', 'statistics.viewCount', 'statistics.subscriberCount', 'statistics.videoCount', 'snippet.country']
     models_playlists = ['id', 'snippet.title', 'snippet.description', 'snippet.publishedAt', 'contentDetails.itemCount']
     models_videos = ['id', 'snippet.title', 'snippet.description', 'snippet.publishedAt', 'statistics.viewCount', 'statistics.likeCount', 'statistics.commentCount']
     models_comments = ['id', 'snippet.videoId', 'snippet.textOriginal', 'snippet.authorChannelId.value', 'snippet.likeCount', 'snippet.publishedAt', 'snippet.updatedAt']
+    models_posts = ['subreddit_name_prefixed', 'author_fullname', 'title', 'num_comments', 'score', 'ups', 'upvote_ratio']
     
     about = html.Div([
         html.H1('SMC360', className='text-info', style={'font-weight': 'bold', 'textAlign': 'center'}),
@@ -461,7 +508,9 @@ def explorer():
             " to build meta data table model for youtube.",
             html.Br(), html.Br(), "Visit ",
             html.A('Instagram Basic Display API documentation', href='https://developers.facebook.com/docs/instagram-basic-display-api', target='_blank'),
-            " to build meta data table model for instagram."
+            " to build meta data table model for instagram.",
+            html.Br(), html.Br(), "Visit ",
+            "⚠️ Reddit `smc` is under development"
         ])
     ],
         id="models-offcanvas",
@@ -478,7 +527,9 @@ def explorer():
             html.A('YouTube Data API documentation', href='https://developers.google.com/youtube/v3/docs', target='_blank'),
             " to build parameters dictionary for youtube.",
             html.Br(), html.Br(),
-            "Incase of Instagram parameters are not supported as you will already pass access_token, so leave the dictionaries empty"
+            "Incase of Instagram parameters are not supported as you will already pass access_token, so leave the dictionaries empty",
+            html.Br(), html.Br(),
+            "⚠️ Reddit `smc` is under development"
         ])
     ],
         id="input-offcanvas",
@@ -726,9 +777,11 @@ def explorer():
                     div = div['props']['children']
                     if div[0]['type'] == 'H6':
                         input_configuration[div[0]['props']['children'].lower()] = {}
-                        if len(div)>2 and div[2]['props']['children'][1]['props'].get('value') is not None:
+                        if len(div)>2:
                             input_configuration[div[0]['props']['children'].lower()] = {}
-                            input_configuration[div[0]['props']['children'].lower()][div[2]['props']['children'][0]['props']['value']] = div[2]['props']['children'][1]['props']['value']
+                            for ele_num in range(2, len(div)):
+                                if div[ele_num]['props']['children'][1]['props'].get('value') is not None:
+                                    input_configuration[div[0]['props']['children'].lower()][div[ele_num]['props']['children'][0]['props']['value']] = div[ele_num]['props']['children'][1]['props']['value']
                     if div[0]['type'] == 'Input':
                         if div[1]['props'].get('value') is not None:
                             input_configuration[div[0]['props']['value']] = div[1]['props']['value']
@@ -996,24 +1049,50 @@ def explorer():
         return children
     
     @app.callback(
+        Output("posts", "children"),
+        [Input("button-posts", "n_clicks"),
+        Input("button-clear-posts", "n_clicks")],
+        [State("posts", "children")]
+    )
+    def modify_posts(add_clicks, clear_clicks, children):
+        ctx = dash.callback_context
+        trigger_id = ctx.triggered[0]['prop_id'].split('.')[0]
+
+        if trigger_id == 'button-posts' and add_clicks > 0:
+            new_input = html.Div(
+                style={'display': 'flex', 'flexDirection': 'row'}, className='mb-1',
+                children=[
+                    dcc.Dropdown(clearable=False, options=models_posts, value=models_posts[0], persistence=True, style={'border-width': '2px', 'border-color': 'black', 'width': '100%'}),
+                    dcc.Input(type='text', placeholder="alias (optional)", style={'border-radius': 5, 'border-style': 'solid black', 'border-width': '2px'})
+                    ])
+            children.append(new_input)
+        elif trigger_id == 'button-clear-posts' and clear_clicks > 0:
+            children = []
+
+        return children
+    
+    @app.callback(
         Output("instagram", "children"),
-        [Input("button-input-instagram-limit", "n_clicks"),
-        Input("button-instagram-clear", "n_clicks")],
+        [Input("button-instagram-clear", "n_clicks")],
         State("instagram", "children"),
         prevent_initial_callback=True
     )
-    def modify_instagram(limit_n_clicks, clear_n_clicks, children):
+    def modify_instagram(clear_n_clicks, children):
         ctx = dash.callback_context
-        if ctx.triggered_id == 'button-input-instagram-limit':
-            update_child = html.Div(
-                style={'display': 'flex', 'flexDirection': 'row', 'border': '2px solid black', "background-color": "white", "padding": "10px"}, className='mb-2',
-                children=[
+        # if ctx.triggered_id == 'button-input-instagram-limit':
+        #     update_child = html.Div(
+        #         style={'display': 'flex', 'flexDirection': 'row', 'border': '2px solid black', "background-color": "white", "padding": "10px"}, className='mb-2',
+        #         children=[
+        #             dcc.Input(type='text', value='default_limit', style={'font-weight': 'bold', 'border-radius': 5, 'border-style': 'solid black', 'border-width': '2px'}, disabled=True),
+        #             dcc.Input(type='number', value=5000, style={'border-radius': 5, 'border-style': 'solid black', 'border-width': '2px', 'width': '100%'})
+        #             ])
+        #     children.append(update_child)
+        if ctx.triggered_id == 'button-instagram-clear':
+            children = [
+                html.Div([
                     dcc.Input(type='text', value='default_limit', style={'font-weight': 'bold', 'border-radius': 5, 'border-style': 'solid black', 'border-width': '2px'}, disabled=True),
                     dcc.Input(type='number', value=5000, style={'border-radius': 5, 'border-style': 'solid black', 'border-width': '2px', 'width': '100%'})
-                    ])
-            children.append(update_child)
-        elif ctx.triggered_id == 'button-instagram-clear':
-            children = [
+                    ], style={'display': 'flex', 'flexDirection': 'row', 'border': '2px solid black', "background-color": "white", "padding": "10px"}, className='mb-2'),
                 html.Div([
                     html.H6('USERS', className='text-info', style={'font-weight': 'bold'}),
                     html.Hr(),
@@ -1023,6 +1102,46 @@ def explorer():
                     html.Hr(),
                     ], style={'border': '2px solid black', "background-color": "white", "padding": "10px"}, className='mb-2')
             ]
+        return children
+    
+    @app.callback(
+        Output("reddit", "children"),
+        [Input("button-input-posts", "n_clicks"),
+        Input("button-input-reddit-limit", "n_clicks"),
+        Input("button-reddit-clear", "n_clicks")],
+        State("reddit", "children"),
+        prevent_initial_callback=True
+    )
+    def modify_reddit(posts_n_clicks, limit_n_clicks, clear_n_clicks, children):
+        ctx = dash.callback_context
+        if ctx.triggered_id == 'button-input-posts':
+            update_child = html.Div([
+                    html.H6('POSTS', className='text-info', style={'font-weight': 'bold'}),
+                    html.Hr(),
+                    html.Div(
+                    style={'display': 'flex', 'flexDirection': 'row', "background-color": "white"}, 
+                    children=[
+                        dcc.Input(type='text', value='subreddit', style={'font-weight': 'bold', 'border-radius': 5, 'border-style': 'solid black', 'border-width': '2px'}, disabled=True),
+                        dcc.Input(type='text', style={'border-radius': 5, 'border-style': 'solid black', 'border-width': '2px', 'width': '100%'})
+                        ]),
+                    html.Div(
+                    style={'display': 'flex', 'flexDirection': 'row', "background-color": "white"}, 
+                    children=[
+                        dcc.Input(type='text', value='type', style={'font-weight': 'bold', 'border-radius': 5, 'border-style': 'solid black', 'border-width': '2px'}, disabled=True),
+                        dcc.Input(type='text', style={'border-radius': 5, 'border-style': 'solid black', 'border-width': '2px', 'width': '100%'})
+                        ])
+                    ], style={'border': '2px solid black', "background-color": "white", "padding": "10px"}, className='mb-2 mt-2')
+            children.append(update_child)
+        elif ctx.triggered_id == 'button-input-reddit-limit':
+            update_child = html.Div(
+                style={'display': 'flex', 'flexDirection': 'row', 'border': '2px solid black', "background-color": "white", "padding": "10px"}, className='mb-2',
+                children=[
+                    dcc.Input(type='text', value='default_limit', style={'font-weight': 'bold', 'border-radius': 5, 'border-style': 'solid black', 'border-width': '2px'}, disabled=True),
+                    dcc.Input(type='number', value=5000, style={'border-radius': 5, 'border-style': 'solid black', 'border-width': '2px', 'width': '100%'})
+                    ])
+            children.append(update_child)
+        elif ctx.triggered_id == 'button-reddit-clear':
+            children = []
         return children
     
     @app.callback(
@@ -1129,15 +1248,15 @@ def explorer():
             children = []
         return children
     
-    app.clientside_callback(
-        ClientsideFunction(namespace="clientside", function_name="make_draggable"),
-        Output("instagram", "data-drag"),
-        [Input("instagram", "id")]
-    )
-    app.clientside_callback(
-        ClientsideFunction(namespace="clientside", function_name="make_draggable"),
-        Output("youtube", "data-drag"),
-        [Input("youtube", "id")]
-    )
+    # app.clientside_callback(
+    #     ClientsideFunction(namespace="clientside", function_name="make_draggable"),
+    #     Output("instagram", "data-drag"),
+    #     [Input("instagram", "id")]
+    # )
+    # app.clientside_callback(
+    #     ClientsideFunction(namespace="clientside", function_name="make_draggable"),
+    #     Output("youtube", "data-drag"),
+    #     [Input("youtube", "id")]
+    # )
     
     app.run(debug=True)
